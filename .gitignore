@@ -81,3 +81,7 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+
+.npmrc
+.replit
+.replitignore
