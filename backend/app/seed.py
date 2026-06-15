@@ -1,0 +1,322 @@
+"""
+MCU Seed — Ordem Cronológica Completa
+Run: docker compose exec api python -m app.seed
+"""
+
+from sqlalchemy.orm import Session
+
+from app.database.session import SessionLocal
+from app.models.models import Content, ContentType, Era, Marathon, MarathonItem, Universe
+
+
+# ---------------------------------------------------------------------------
+# Data
+# ---------------------------------------------------------------------------
+
+UNIVERSE = {
+    "name": "Marvel Cinematic Universe",
+    "slug": "mcu",
+    "description": "O universo cinematográfico da Marvel, desde a Segunda Guerra até o Multiverso.",
+}
+
+MARATHON = {
+    "name": "MCU — Ordem Cronológica",
+    "description": "Todos os filmes, séries, especiais e one-shots em ordem cronológica dos eventos no universo.",
+}
+
+# Each era: (name, position)
+ERAS: list[tuple[str, int]] = [
+    ("Era da Segunda Guerra e Pós-Guerra", 1),
+    ("Década de 1990", 2),
+    ("Início da Era dos Heróis", 3),
+    ("Pós-Batalha de Nova York", 4),
+    ("Expansão Cósmica", 5),
+    ("Ascensão dos Vigilantes de Rua", 6),
+    ("Era de Ultron", 7),
+    ("Guerra Civil", 8),
+    ("Ragnarok e o Fim da Saga do Infinito", 9),
+    ("O Blip e o Retorno", 10),
+    ("Saga do Multiverso", 11),
+    ("Multiverso / Realidades Paralelas (opcional)", 12),
+]
+
+# Each content: (title, type, release_date, runtime_minutes)
+CONTENTS: list[tuple[str, ContentType, str | None, int | None]] = [
+    # Era 1 — Segunda Guerra e Pós-Guerra
+    ("Captain America: The First Avenger", ContentType.movie, "2011-07-22", 124),
+    ("Agent Carter", ContentType.special, "2013-09-03", 15),
+    ("Agent Carter – Temporada 1", ContentType.series, "2015-01-06", 480),
+    ("Agent Carter – Temporada 2", ContentType.series, "2016-01-19", 440),
+    # Era 2 — Década de 1990
+    ("Captain Marvel", ContentType.movie, "2019-03-08", 124),
+    # Era 3 — Início da Era dos Heróis
+    ("Iron Man", ContentType.movie, "2008-05-02", 126),
+    ("Iron Man 2", ContentType.movie, "2010-05-07", 124),
+    ("The Incredible Hulk", ContentType.movie, "2008-06-13", 112),
+    ("The Consultant", ContentType.one_shot, "2011-09-13", 4),
+    ("A Funny Thing Happened on the Way to Thor's Hammer", ContentType.one_shot, "2011-09-13", 4),
+    ("Thor", ContentType.movie, "2011-05-06", 115),
+    ("The Avengers", ContentType.movie, "2012-05-04", 143),
+    ("Item 47", ContentType.one_shot, "2012-09-25", 12),
+    # Era 4 — Pós-Batalha de Nova York
+    ("Iron Man 3", ContentType.movie, "2013-05-03", 130),
+    ("All Hail the King", ContentType.one_shot, "2014-02-04", 14),
+    ("Agents of S.H.I.E.L.D. – Temporada 1", ContentType.series, "2013-09-24", 990),
+    ("Thor: The Dark World", ContentType.movie, "2013-11-08", 112),
+    ("Captain America: The Winter Soldier", ContentType.movie, "2014-04-04", 136),
+    ("Agents of S.H.I.E.L.D. – Temporada 2", ContentType.series, "2014-09-23", 990),
+    # Era 5 — Expansão Cósmica
+    ("Guardians of the Galaxy", ContentType.movie, "2014-08-01", 121),
+    ("Guardians of the Galaxy Vol. 2", ContentType.movie, "2017-05-05", 136),
+    # Era 6 — Ascensão dos Vigilantes de Rua
+    ("Daredevil – Temporada 1", ContentType.series, "2015-04-10", 780),
+    ("Jessica Jones – Temporada 1", ContentType.series, "2015-11-20", 676),
+    # Era 7 — Era de Ultron
+    ("Avengers: Age of Ultron", ContentType.movie, "2015-05-01", 141),
+    ("Ant-Man", ContentType.movie, "2015-07-17", 117),
+    ("Daredevil – Temporada 2", ContentType.series, "2016-03-18", 676),
+    ("Luke Cage – Temporada 1", ContentType.series, "2016-09-30", 676),
+    ("Agents of S.H.I.E.L.D. – Temporada 3", ContentType.series, "2015-09-29", 990),
+    # Era 8 — Guerra Civil
+    ("Captain America: Civil War", ContentType.movie, "2016-05-06", 147),
+    ("Black Widow", ContentType.movie, "2021-07-09", 134),
+    ("Black Panther", ContentType.movie, "2018-02-16", 134),
+    ("Spider-Man: Homecoming", ContentType.movie, "2017-07-07", 133),
+    ("The Punisher – Temporada 1", ContentType.series, "2017-11-17", 676),
+    ("Doctor Strange", ContentType.movie, "2016-11-04", 115),
+    ("Agents of S.H.I.E.L.D. – Temporada 4", ContentType.series, "2016-09-20", 990),
+    ("Iron Fist – Temporada 1", ContentType.series, "2017-03-17", 676),
+    ("The Defenders", ContentType.series, "2017-08-18", 440),
+    ("Inhumans", ContentType.series, "2017-09-29", 440),
+    # Era 9 — Ragnarok e o Fim da Saga do Infinito
+    ("The Punisher – Temporada 2", ContentType.series, "2019-01-18", 676),
+    ("Jessica Jones – Temporada 2", ContentType.series, "2018-03-08", 676),
+    ("Luke Cage – Temporada 2", ContentType.series, "2018-06-22", 676),
+    ("Iron Fist – Temporada 2", ContentType.series, "2018-09-07", 440),
+    ("Daredevil – Temporada 3", ContentType.series, "2018-10-19", 676),
+    ("Runaways", ContentType.series, "2017-11-21", 990),
+    ("Cloak & Dagger", ContentType.series, "2018-06-07", 660),
+    ("Thor: Ragnarok", ContentType.movie, "2017-11-03", 130),
+    ("Agents of S.H.I.E.L.D. – Temporada 5", ContentType.series, "2017-12-01", 990),
+    ("Ant-Man and the Wasp", ContentType.movie, "2018-07-06", 118),
+    ("Avengers: Infinity War", ContentType.movie, "2018-04-27", 149),
+    # Era 10 — O Blip e o Retorno
+    ("Agents of S.H.I.E.L.D. – Temporada 6", ContentType.series, "2019-05-10", 594),
+    ("Agents of S.H.I.E.L.D. – Temporada 7", ContentType.series, "2020-05-27", 594),
+    ("Avengers: Endgame", ContentType.movie, "2019-04-26", 181),
+    # Era 11 — Saga do Multiverso
+    ("Loki – Temporada 1", ContentType.series, "2021-06-09", 360),
+    ("What If...? – Temporada 1", ContentType.series, "2021-08-11", 360),
+    ("WandaVision", ContentType.series, "2021-01-15", 396),
+    ("The Falcon and the Winter Soldier", ContentType.series, "2021-03-19", 360),
+    ("Shang-Chi and the Legend of the Ten Rings", ContentType.movie, "2021-09-03", 132),
+    ("Eternals", ContentType.movie, "2021-11-05", 156),
+    ("Spider-Man: Far From Home", ContentType.movie, "2019-07-02", 129),
+    ("Spider-Man: No Way Home", ContentType.movie, "2021-12-17", 148),
+    ("Hawkeye", ContentType.series, "2021-11-24", 360),
+    ("Doctor Strange in the Multiverse of Madness", ContentType.movie, "2022-05-06", 126),
+    ("Moon Knight", ContentType.series, "2022-03-30", 360),
+    ("Ms. Marvel", ContentType.series, "2022-06-08", 360),
+    ("She-Hulk: Attorney at Law", ContentType.series, "2022-08-18", 360),
+    ("Thor: Love and Thunder", ContentType.movie, "2022-07-08", 119),
+    ("Werewolf by Night", ContentType.special, "2022-10-07", 52),
+    ("Black Panther: Wakanda Forever", ContentType.movie, "2022-11-11", 161),
+    ("The Guardians of the Galaxy Holiday Special", ContentType.special, "2022-11-25", 44),
+    ("Ant-Man and the Wasp: Quantumania", ContentType.movie, "2023-02-17", 124),
+    ("Guardians of the Galaxy Vol. 3", ContentType.movie, "2023-05-05", 150),
+    ("Secret Invasion", ContentType.series, "2023-06-21", 360),
+    ("The Marvels", ContentType.movie, "2023-11-10", 105),
+    ("Loki – Temporada 2", ContentType.series, "2023-10-05", 360),
+    ("Echo", ContentType.series, "2024-01-09", 300),
+    ("Deadpool & Wolverine", ContentType.movie, "2024-07-26", 128),
+    ("Agatha All Along", ContentType.series, "2024-09-18", 360),
+    ("Ironheart", ContentType.series, "2025-06-24", 360),
+    ("Daredevil: Born Again", ContentType.series, "2025-03-04", 540),
+    ("Captain America: Brave New World", ContentType.movie, "2025-02-14", 118),
+    ("Thunderbolts*", ContentType.movie, "2025-05-02", 127),
+    ("The Fantastic Four: First Steps", ContentType.movie, "2025-07-25", 130),
+    ("Avengers: Doomsday", ContentType.movie, "2026-05-01", None),
+    # Era 12 — Multiverso / Realidades Paralelas (opcional)
+    ("X-Men '97", ContentType.series, "2024-03-20", 660),
+    ("Marvel Zombies", ContentType.series, "2024-10-03", 360),
+    ("Your Friendly Neighborhood Spider-Man", ContentType.series, "2025-01-29", 360),
+    ("Spider-Man – Trilogia (Sam Raimi)", ContentType.series, None, None),
+    ("The Amazing Spider-Man – Duologia", ContentType.series, None, None),
+    ("X-Men – Franquia", ContentType.series, None, None),
+]
+
+# marathon_items: (content_title, era_name, position, canonical)
+MARATHON_ITEMS: list[tuple[str, str, int, bool]] = [
+    # Era 1
+    ("Captain America: The First Avenger", "Era da Segunda Guerra e Pós-Guerra", 1, True),
+    ("Agent Carter", "Era da Segunda Guerra e Pós-Guerra", 2, True),
+    ("Agent Carter – Temporada 1", "Era da Segunda Guerra e Pós-Guerra", 3, True),
+    ("Agent Carter – Temporada 2", "Era da Segunda Guerra e Pós-Guerra", 4, True),
+    # Era 2
+    ("Captain Marvel", "Década de 1990", 5, True),
+    # Era 3
+    ("Iron Man", "Início da Era dos Heróis", 6, True),
+    ("Iron Man 2", "Início da Era dos Heróis", 7, True),
+    ("The Incredible Hulk", "Início da Era dos Heróis", 8, True),
+    ("The Consultant", "Início da Era dos Heróis", 9, True),
+    ("A Funny Thing Happened on the Way to Thor's Hammer", "Início da Era dos Heróis", 10, True),
+    ("Thor", "Início da Era dos Heróis", 11, True),
+    ("The Avengers", "Início da Era dos Heróis", 12, True),
+    ("Item 47", "Início da Era dos Heróis", 13, True),
+    # Era 4
+    ("Iron Man 3", "Pós-Batalha de Nova York", 14, True),
+    ("All Hail the King", "Pós-Batalha de Nova York", 15, True),
+    ("Agents of S.H.I.E.L.D. – Temporada 1", "Pós-Batalha de Nova York", 16, True),
+    ("Thor: The Dark World", "Pós-Batalha de Nova York", 17, True),
+    ("Captain America: The Winter Soldier", "Pós-Batalha de Nova York", 18, True),
+    ("Agents of S.H.I.E.L.D. – Temporada 2", "Pós-Batalha de Nova York", 19, True),
+    # Era 5
+    ("Guardians of the Galaxy", "Expansão Cósmica", 20, True),
+    ("Guardians of the Galaxy Vol. 2", "Expansão Cósmica", 21, True),
+    # Era 6
+    ("Daredevil – Temporada 1", "Ascensão dos Vigilantes de Rua", 22, False),
+    ("Jessica Jones – Temporada 1", "Ascensão dos Vigilantes de Rua", 23, False),
+    # Era 7
+    ("Avengers: Age of Ultron", "Era de Ultron", 24, True),
+    ("Ant-Man", "Era de Ultron", 25, True),
+    ("Daredevil – Temporada 2", "Era de Ultron", 26, False),
+    ("Luke Cage – Temporada 1", "Era de Ultron", 27, False),
+    ("Agents of S.H.I.E.L.D. – Temporada 3", "Era de Ultron", 28, True),
+    # Era 8
+    ("Captain America: Civil War", "Guerra Civil", 29, True),
+    ("Black Widow", "Guerra Civil", 30, True),
+    ("Black Panther", "Guerra Civil", 31, True),
+    ("Spider-Man: Homecoming", "Guerra Civil", 32, True),
+    ("The Punisher – Temporada 1", "Guerra Civil", 33, False),
+    ("Doctor Strange", "Guerra Civil", 34, True),
+    ("Agents of S.H.I.E.L.D. – Temporada 4", "Guerra Civil", 35, True),
+    ("Iron Fist – Temporada 1", "Guerra Civil", 36, False),
+    ("The Defenders", "Guerra Civil", 37, False),
+    ("Inhumans", "Guerra Civil", 38, False),
+    # Era 9
+    ("The Punisher – Temporada 2", "Ragnarok e o Fim da Saga do Infinito", 39, False),
+    ("Jessica Jones – Temporada 2", "Ragnarok e o Fim da Saga do Infinito", 40, False),
+    ("Luke Cage – Temporada 2", "Ragnarok e o Fim da Saga do Infinito", 41, False),
+    ("Iron Fist – Temporada 2", "Ragnarok e o Fim da Saga do Infinito", 42, False),
+    ("Daredevil – Temporada 3", "Ragnarok e o Fim da Saga do Infinito", 43, False),
+    ("Runaways", "Ragnarok e o Fim da Saga do Infinito", 44, False),
+    ("Cloak & Dagger", "Ragnarok e o Fim da Saga do Infinito", 45, False),
+    ("Thor: Ragnarok", "Ragnarok e o Fim da Saga do Infinito", 46, True),
+    ("Agents of S.H.I.E.L.D. – Temporada 5", "Ragnarok e o Fim da Saga do Infinito", 47, True),
+    ("Ant-Man and the Wasp", "Ragnarok e o Fim da Saga do Infinito", 48, True),
+    ("Avengers: Infinity War", "Ragnarok e o Fim da Saga do Infinito", 49, True),
+    # Era 10
+    ("Agents of S.H.I.E.L.D. – Temporada 6", "O Blip e o Retorno", 50, True),
+    ("Agents of S.H.I.E.L.D. – Temporada 7", "O Blip e o Retorno", 51, True),
+    ("Avengers: Endgame", "O Blip e o Retorno", 52, True),
+    # Era 11
+    ("Loki – Temporada 1", "Saga do Multiverso", 53, True),
+    ("What If...? – Temporada 1", "Saga do Multiverso", 54, True),
+    ("WandaVision", "Saga do Multiverso", 55, True),
+    ("The Falcon and the Winter Soldier", "Saga do Multiverso", 56, True),
+    ("Shang-Chi and the Legend of the Ten Rings", "Saga do Multiverso", 57, True),
+    ("Eternals", "Saga do Multiverso", 58, True),
+    ("Spider-Man: Far From Home", "Saga do Multiverso", 59, True),
+    ("Spider-Man: No Way Home", "Saga do Multiverso", 60, True),
+    ("Hawkeye", "Saga do Multiverso", 61, True),
+    ("Doctor Strange in the Multiverse of Madness", "Saga do Multiverso", 62, True),
+    ("Moon Knight", "Saga do Multiverso", 63, True),
+    ("Ms. Marvel", "Saga do Multiverso", 64, True),
+    ("She-Hulk: Attorney at Law", "Saga do Multiverso", 65, True),
+    ("Thor: Love and Thunder", "Saga do Multiverso", 66, True),
+    ("Werewolf by Night", "Saga do Multiverso", 67, True),
+    ("Black Panther: Wakanda Forever", "Saga do Multiverso", 68, True),
+    ("The Guardians of the Galaxy Holiday Special", "Saga do Multiverso", 69, True),
+    ("Ant-Man and the Wasp: Quantumania", "Saga do Multiverso", 70, True),
+    ("Guardians of the Galaxy Vol. 3", "Saga do Multiverso", 71, True),
+    ("Secret Invasion", "Saga do Multiverso", 72, True),
+    ("The Marvels", "Saga do Multiverso", 73, True),
+    ("Loki – Temporada 2", "Saga do Multiverso", 74, True),
+    ("Echo", "Saga do Multiverso", 75, True),
+    ("Deadpool & Wolverine", "Saga do Multiverso", 76, True),
+    ("Agatha All Along", "Saga do Multiverso", 77, True),
+    ("Ironheart", "Saga do Multiverso", 78, True),
+    ("Daredevil: Born Again", "Saga do Multiverso", 79, True),
+    ("Captain America: Brave New World", "Saga do Multiverso", 80, True),
+    ("Thunderbolts*", "Saga do Multiverso", 81, True),
+    ("The Fantastic Four: First Steps", "Saga do Multiverso", 82, True),
+    ("Avengers: Doomsday", "Saga do Multiverso", 83, True),
+    # Era 12 — opcional
+    ("X-Men '97", "Multiverso / Realidades Paralelas (opcional)", 84, False),
+    ("Marvel Zombies", "Multiverso / Realidades Paralelas (opcional)", 85, False),
+    ("Your Friendly Neighborhood Spider-Man", "Multiverso / Realidades Paralelas (opcional)", 86, False),
+    ("Spider-Man – Trilogia (Sam Raimi)", "Multiverso / Realidades Paralelas (opcional)", 87, False),
+    ("The Amazing Spider-Man – Duologia", "Multiverso / Realidades Paralelas (opcional)", 88, False),
+    ("X-Men – Franquia", "Multiverso / Realidades Paralelas (opcional)", 89, False),
+]
+
+
+# ---------------------------------------------------------------------------
+# Seed logic
+# ---------------------------------------------------------------------------
+
+def seed(db: Session) -> None:
+    # Guard: skip if already seeded
+    if db.query(Universe).filter(Universe.slug == "mcu").first():
+        print("Seed already applied, skipping.")
+        return
+
+    print("Seeding universe...")
+    universe = Universe(**UNIVERSE)
+    db.add(universe)
+    db.flush()
+
+    print("Seeding marathon...")
+    marathon = Marathon(universe_id=universe.id, **MARATHON)
+    db.add(marathon)
+    db.flush()
+
+    print("Seeding eras...")
+    era_map: dict[str, Era] = {}
+    for name, position in ERAS:
+        era = Era(marathon_id=marathon.id, name=name, position=position)
+        db.add(era)
+        db.flush()
+        era_map[name] = era
+
+    print("Seeding contents...")
+    content_map: dict[str, Content] = {}
+    for title, ctype, release_date, runtime in CONTENTS:
+        content = Content(
+            title=title,
+            type=ctype,
+            release_date=release_date,
+            runtime=runtime,
+        )
+        db.add(content)
+        db.flush()
+        content_map[title] = content
+
+    print("Seeding marathon items...")
+    for title, era_name, position, canonical in MARATHON_ITEMS:
+        item = MarathonItem(
+            marathon_id=marathon.id,
+            content_id=content_map[title].id,
+            era_id=era_map[era_name].id,
+            position=position,
+            canonical=canonical,
+        )
+        db.add(item)
+
+    db.commit()
+    print(f"Done! {len(CONTENTS)} contents, {len(MARATHON_ITEMS)} items, {len(ERAS)} eras.")
+
+
+def main() -> None:
+    db = SessionLocal()
+    try:
+        seed(db)
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+
+if __name__ == "__main__":
+    main()
