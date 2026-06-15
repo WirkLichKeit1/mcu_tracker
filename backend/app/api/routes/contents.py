@@ -11,7 +11,7 @@ router = APIRouter(prefix="/contents", tags=["contents"])
 def get_service(db: Session = Depends(get_db)) -> ContentService:
     return ContentService(db)
 
-@router.get("/", response_model=list[ContentOut])
+@router.get("", response_model=list[ContentOut])
 def list_contents(
     skip: int = 0,
     limit: int = 100,
@@ -27,7 +27,7 @@ def get_content(
 ) -> Content:
     return service.get(id)
 
-@router.post("/", response_model=ContentOut, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=ContentOut, status_code=status.HTTP_201_CREATED)
 def create_content(
     schema: ContentCreate,
     service: ContentService = Depends(get_service),

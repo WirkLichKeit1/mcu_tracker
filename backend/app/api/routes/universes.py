@@ -11,7 +11,7 @@ router = APIRouter(prefix="/universes", tags=["universes"])
 def get_service(db: Session = Depends(get_db)) -> UniverseService:
     return UniverseService(db)
 
-@router.get("/", response_model=list[UniverseOut])
+@router.get("", response_model=list[UniverseOut])
 def list_universes(
     skip: int = 0,
     limit: int = 100,
@@ -26,7 +26,7 @@ def get_universe(
 ) -> Universe:
     return service.get(id)
 
-@router.post("/", response_model=UniverseOut, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=UniverseOut, status_code=status.HTTP_201_CREATED)
 def create_universe(
     schema: UniverseCreate,
     service: UniverseService = Depends(get_service),

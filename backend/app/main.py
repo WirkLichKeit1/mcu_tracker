@@ -11,7 +11,6 @@ app = FastAPI(
     title="MCU Tracker",
     description="Track your MCU marathon progress",
     version="0.1.0",
-    redirect_slashes=False,
     middleware=[
         Middleware(
             CORSMiddleware,

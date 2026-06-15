@@ -11,7 +11,7 @@ router = APIRouter(prefix="/eras", tags=["eras"])
 def get_service(db: Session = Depends(get_db)) -> EraService:
     return EraService(db)
 
-@router.get("/", response_model=list[EraOut])
+@router.get("", response_model=list[EraOut])
 def list_eras(
     marathon_id: int,
     service: EraService = Depends(get_service),
@@ -25,7 +25,7 @@ def get_era(
 ) -> Era:
     return service.get(id)
 
-@router.post("/", response_model=EraOut, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=EraOut, status_code=status.HTTP_201_CREATED)
 def create_era(
     schema: EraCreate,
     service: EraService = Depends(get_service),

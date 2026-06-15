@@ -11,7 +11,7 @@ router = APIRouter(prefix="/marathons", tags=["marathons"])
 def get_service(db: Session = Depends(get_db)) -> MarathonService:
     return MarathonService(db)
 
-@router.get("/", response_model=list[MarathonOut])
+@router.get("", response_model=list[MarathonOut])
 def list_marathons(
     universe_id: int | None = None,
     service: MarathonService = Depends(get_service),
@@ -25,7 +25,7 @@ def get_marathon(
 ) -> Marathon:
     return service.get(id)
 
-@router.post("/", response_model=MarathonOut, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=MarathonOut, status_code=status.HTTP_201_CREATED)
 def create_marathon(
     schema: MarathonCreate,
     service: MarathonService = Depends(get_service),
