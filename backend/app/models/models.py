@@ -52,7 +52,7 @@ class Marathon(Base):
         DateTime, nullable=False, server_default=func.now()
     )
 
-    universe: Mapped["Universe"] = relationship("Universe", back_populates="marathon")
+    universe: Mapped["Universe"] = relationship("Universe", back_populates="marathons")
     eras: Mapped[list["Era"]] = relationship(
         "Era", back_populates="marathon", cascade="all, delete-orphan"
     )
