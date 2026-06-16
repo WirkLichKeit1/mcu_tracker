@@ -22,9 +22,6 @@ services:
     environment:
       DATABASE_URL: mysql+pymysql://${MYSQL_USER:-mcu}:${MYSQL_PASSWORD:-mcu}@db:3306/${MYSQL_DATABASE:-mcu_tracker}
       ENV: ${ENV:-development}
-      MYSQL_USER: ${MYSQL_USER:-mcu}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-mcu}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-mcu_tracker}
     ports:
       - "8080:8080"
     volumes:
