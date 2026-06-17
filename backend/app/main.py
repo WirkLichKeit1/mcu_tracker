@@ -5,7 +5,10 @@ from starlette.middleware import Middleware
 from app.config import settings
 from app.api.routes import universes, marathons, eras, contents, marathon_items, progress
 
-_cors_origins = ["*"] if settings.ENV == "development" else []
+if settings.ENV == "development":
+    _cors_origins = ["*"]
+else:
+    _cors_origins = [settings.FRONTEND_URL]
 
 app = FastAPI(
     title="MCU Tracker",
