@@ -5,6 +5,8 @@ from app.models.models import Content, ContentType
 from app.repositories.content import ContentRepository
 from app.schemas.content import ContentCreate, ContentUpdate
 
+from typing import List
+
 class ContentService:
     def __init__(self, db: Session) -> None:
         self.repo = ContentRepository(db)
@@ -14,7 +16,7 @@ class ContentService:
         skip: int = 0,
         limit: int = 100,
         type: ContentType | None = None,
-    ) -> list[Content]:
+    ) -> List[Content]:
         return self.repo.list(skip=skip, limit=limit, type=type)
 
     def get(self, id: int) -> Content:
@@ -50,7 +52,7 @@ class ContentService:
             )
         return obj
 
-    def list_episodes(self, parent_id: int) -> list[Content]:
+    def list_episodes(self, parent_id: int) -> List[Content]:
         parent = self.repo.get(parent_id)
         if not parent:
             raise HTTPException(

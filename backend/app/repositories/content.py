@@ -4,6 +4,8 @@ from app.models.models import Content, ContentType
 from app.repositories.base import BaseRepository
 from app.schemas.content import ContentCreate, ContentUpdate
 
+from typing import List
+
 class ContentRepository(BaseRepository[Content]):
     def __init__(self, db: Session) -> None:
         super().__init__(Content, db)
@@ -13,13 +15,13 @@ class ContentRepository(BaseRepository[Content]):
         skip: int = 0,
         limit: int = 100,
         type: ContentType | None = None,
-    ) -> list[Content]:
+    ) -> List[Content]:
         query = self.db.query(Content)
         if type is not None:
             query = query.filter(Content.type == type)
         return query.offset(skip).limit(limit).all()
 
-    def list_episodes(self, parent_id: int) -> list[Content]:
+    def list_episodes(self, parent_id: int) -> List[Content]:
         return (
             self.db.query(Content)
             .filter(Content.parent_id == parent_id)
