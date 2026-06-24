@@ -92,8 +92,27 @@ class Content(Base):
     poster_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     release_date: Mapped[str | None] = mapped_column(String(20), nullable=True)
     runtime: Mapped[int | None] = mapped_column(Integer, nullable=True)  # minutes
+    episode_number: Mapped[int | None] = mapped_column(Integer, nullable=True)  # position within season
+    parent_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("content.id", ondelete="CASCADE"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.now()
+    )
+
+    # Self-referential: season → episodes
+    episodes: Mapped[list["Content"]] = relationship(
+        "Content",
+        back_populates="parent",
+        cascade="all, delete-orphan",
+        order_by="Content.episode_number",
+        foreign_keys="Content.parent_id",
+    )
+    parent: Mapped["Content | None"] = relationship(
+        "Content",
+        back_populates="episodes",
+        remote_side="Content.id",
+        foreign_keys="Content.parent_id",
     )
 
     marathon_items: Mapped[list["MarathonItem"]] = relationship(

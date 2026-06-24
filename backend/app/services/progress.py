@@ -44,19 +44,34 @@ class ProgressService:
         progress_rows = {p.content_id: p for p in self.repo.list_by_marathon(marathon_id)}
 
         completed = 0
+        total = 0
         hours_watched: float = 0.0
         hours_remaining: float = 0.0
 
         for item in items:
-            runtime_hours = (item.content.runtime or 0) / 60
-            p = progress_rows.get(item.content_id)
-            if p and p.watched:
-                completed += 1
-                hours_watched += runtime_hours
+            content = item.content
+            # Series with episodes: count each episode individually
+            if content.type.value == "series" and content.episodes:
+                for ep in content.episodes:
+                    total += 1
+                    ep_runtime_hours = (ep.runtime or 0) / 60
+                    ep_progress = progress_rows.get(ep.id)
+                    if ep_progress and ep_progress.watched:
+                        completed += 1
+                        hours_watched += ep_runtime_hours
+                    else:
+                        hours_remaining += ep_runtime_hours
             else:
-                hours_remaining += runtime_hours
+                # Movies, specials, one-shots, series without episodes: 1 unit
+                total += 1
+                runtime_hours = (content.runtime or 0) / 60
+                p = progress_rows.get(content.id)
+                if p and p.watched:
+                    completed += 1
+                    hours_watched += runtime_hours
+                else:
+                    hours_remaining += runtime_hours
 
-        total = len(items)
         remaining = total - completed
         percentage = round((completed / total) * 100, 1) if total else 0.0
 

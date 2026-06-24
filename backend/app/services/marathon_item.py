@@ -6,6 +6,7 @@ from app.repositories.content import ContentRepository
 from app.repositories.era import EraRepository
 from app.repositories.marathon import MarathonRepository
 from app.repositories.marathon_item import MarathonItemRepository
+from app.repositories.progress import ProgressRepository
 from app.schemas.marathon_item import MarathonItemCreate, MarathonItemUpdate
 from app.schemas.progress import NextItemOut
 
@@ -88,14 +89,45 @@ class MarathonItemService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="No unwatched items remaining in this marathon",
             )
+
+        content = item.content
+
+        # If this is a series with episodes, find the first unwatched episode
+        if content.type.value == "series" and content.episodes:
+            progress_repo = ProgressRepository(self.repo.db)
+            progress_map = {
+                p.content_id: p
+                for p in progress_repo.list_by_marathon(marathon_id)
+            }
+            next_episode = None
+            for ep in sorted(content.episodes, key=lambda e: e.episode_number or 0):
+                ep_progress = progress_map.get(ep.id)
+                if not ep_progress or not ep_progress.watched:
+                    next_episode = ep
+                    break
+
+            if next_episode:
+                return NextItemOut(
+                    id=item.id,
+                    content_id=next_episode.id,
+                    title=f"{content.title} — {next_episode.title}",
+                    type="episode",
+                    position=item.position,
+                    era=item.era.name if item.era else None,
+                    poster_url=content.poster_url,
+                    runtime=next_episode.runtime,
+                    canonical=item.canonical,
+                )
+
+        # Movie, special, one-shot — or series without episodes seeded yet
         return NextItemOut(
             id=item.id,
-            content_id=item.content_id,
-            title=item.content.title,
-            type=item.content.type.value,
+            content_id=content.id,
+            title=content.title,
+            type=content.type.value,
             position=item.position,
             era=item.era.name if item.era else None,
-            poster_url=item.content.poster_url,
-            runtime=item.content.runtime,
+            poster_url=content.poster_url,
+            runtime=content.runtime,
             canonical=item.canonical,
         )

@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 from app.database.session import SessionLocal
 from app.models.models import Content, ContentType, Era, Marathon, MarathonItem, Universe
 
-
 # ---------------------------------------------------------------------------
 # Data
 # ---------------------------------------------------------------------------
@@ -122,30 +121,29 @@ CONTENTS: list[tuple[str, ContentType, str | None, int | None]] = [
     ("Werewolf by Night", ContentType.special, "2022-10-07", 52),
     ("Black Panther: Wakanda Forever", ContentType.movie, "2022-11-11", 161),
     ("The Guardians of the Galaxy Holiday Special", ContentType.special, "2022-11-25", 44),
-    ("Ant-Man and the Wasp: Quantumania", ContentType.movie, "2023-02-17", 124),
+    ("Ant-Man and the Wasp: Quantumania", ContentType.movie, "2023-02-17", 125),
     ("Guardians of the Galaxy Vol. 3", ContentType.movie, "2023-05-05", 150),
     ("Secret Invasion", ContentType.series, "2023-06-21", 360),
     ("The Marvels", ContentType.movie, "2023-11-10", 105),
     ("Loki – Temporada 2", ContentType.series, "2023-10-05", 360),
     ("Echo", ContentType.series, "2024-01-09", 300),
     ("Deadpool & Wolverine", ContentType.movie, "2024-07-26", 128),
-    ("Agatha All Along", ContentType.series, "2024-09-18", 360),
+    ("Agatha All Along", ContentType.series, "2024-09-18", 540),
     ("Ironheart", ContentType.series, "2025-06-24", 360),
     ("Daredevil: Born Again", ContentType.series, "2025-03-04", 540),
     ("Captain America: Brave New World", ContentType.movie, "2025-02-14", 118),
     ("Thunderbolts*", ContentType.movie, "2025-05-02", 127),
     ("The Fantastic Four: First Steps", ContentType.movie, "2025-07-25", 130),
-    ("Avengers: Doomsday", ContentType.movie, "2026-05-01", None),
-    # Era 12 — Multiverso / Realidades Paralelas (opcional)
+    ("Avengers: Doomsday", ContentType.movie, "2026-05-01", 150),
+    # Era 12 — opcional
     ("X-Men '97", ContentType.series, "2024-03-20", 660),
-    ("Marvel Zombies", ContentType.series, "2024-10-03", 360),
+    ("Marvel Zombies", ContentType.series, "2025-10-03", 360),
     ("Your Friendly Neighborhood Spider-Man", ContentType.series, "2025-01-29", 360),
-    ("Spider-Man – Trilogia (Sam Raimi)", ContentType.series, None, None),
-    ("The Amazing Spider-Man – Duologia", ContentType.series, None, None),
-    ("X-Men – Franquia", ContentType.series, None, None),
+    ("Spider-Man – Trilogia (Sam Raimi)", ContentType.series, None, 390),
+    ("The Amazing Spider-Man – Duologia", ContentType.series, None, 260),
+    ("X-Men – Franquia", ContentType.series, None, 990),
 ]
 
-# marathon_items: (content_title, era_name, position, canonical)
 MARATHON_ITEMS: list[tuple[str, str, int, bool]] = [
     # Era 1
     ("Captain America: The First Avenger", "Era da Segunda Guerra e Pós-Guerra", 1, True),
@@ -250,6 +248,40 @@ MARATHON_ITEMS: list[tuple[str, str, int, bool]] = [
     ("X-Men – Franquia", "Multiverso / Realidades Paralelas (opcional)", 89, False),
 ]
 
+# ---------------------------------------------------------------------------
+# Episode counts per canonical series  (title → episode_count)
+# runtime per episode = season.runtime // episode_count  (integer division)
+# ---------------------------------------------------------------------------
+SERIES_EPISODES: dict[str, int] = {
+    # Agent Carter
+    "Agent Carter – Temporada 1": 8,
+    "Agent Carter – Temporada 2": 10,
+    # Agents of S.H.I.E.L.D.
+    "Agents of S.H.I.E.L.D. – Temporada 1": 22,
+    "Agents of S.H.I.E.L.D. – Temporada 2": 21,
+    "Agents of S.H.I.E.L.D. – Temporada 3": 21,
+    "Agents of S.H.I.E.L.D. – Temporada 4": 22,
+    "Agents of S.H.I.E.L.D. – Temporada 5": 22,
+    "Agents of S.H.I.E.L.D. – Temporada 6": 12,
+    "Agents of S.H.I.E.L.D. – Temporada 7": 13,
+    # Loki
+    "Loki – Temporada 1": 6,
+    "Loki – Temporada 2": 6,
+    # What If...?
+    "What If...? – Temporada 1": 9,
+    # Disney+ series (all 6-episode seasons unless noted)
+    "WandaVision": 9,
+    "The Falcon and the Winter Soldier": 6,
+    "Hawkeye": 6,
+    "Moon Knight": 6,
+    "Ms. Marvel": 6,
+    "She-Hulk: Attorney at Law": 9,
+    "Secret Invasion": 6,
+    "Echo": 5,
+    "Agatha All Along": 9,
+    "Ironheart": 6,
+    "Daredevil: Born Again": 9,
+}
 
 # ---------------------------------------------------------------------------
 # Seed logic
@@ -292,6 +324,27 @@ def seed(db: Session) -> None:
         db.flush()
         content_map[title] = content
 
+    print("Seeding episodes...")
+    episode_count = 0
+    for series_title, num_episodes in SERIES_EPISODES.items():
+        parent = content_map.get(series_title)
+        if not parent:
+            print(f"  WARNING: series not found in content_map: {series_title}")
+            continue
+        ep_runtime = (parent.runtime or 0) // num_episodes
+        for ep_num in range(1, num_episodes + 1):
+            ep = Content(
+                title=f"Ep {ep_num}",
+                type=ContentType.episode,
+                release_date=parent.release_date,
+                runtime=ep_runtime,
+                episode_number=ep_num,
+                parent_id=parent.id,
+            )
+            db.add(ep)
+        episode_count += num_episodes
+    db.flush()
+
     print("Seeding marathon items...")
     for title, era_name, position, canonical in MARATHON_ITEMS:
         item = MarathonItem(
@@ -304,19 +357,65 @@ def seed(db: Session) -> None:
         db.add(item)
 
     db.commit()
-    print(f"Done! {len(CONTENTS)} contents, {len(MARATHON_ITEMS)} items, {len(ERAS)} eras.")
+    print(
+        f"Done! {len(CONTENTS)} contents, {episode_count} episodes, "
+        f"{len(MARATHON_ITEMS)} items, {len(ERAS)} eras."
+    )
 
+def seed_episodes(db: Session) -> None:
+    """Idempotent: create episode rows for any series that doesn't have them yet.
+
+    Safe to run on an already-seeded database -- skips series that already
+    have at least one child Content(type=episode).
+    """
+    inserted = 0
+    for series_title, num_episodes in SERIES_EPISODES.items():
+        parent = (
+            db.query(Content)
+            .filter(Content.title == series_title, Content.type == ContentType.series)
+            .first()
+        )
+        if not parent:
+            print(f"  seed_episodes: series not found, skipping -- {series_title!r}")
+            continue
+
+        already = (
+            db.query(Content)
+            .filter(Content.parent_id == parent.id)
+            .count()
+        )
+        if already > 0:
+            continue  # already seeded, skip
+
+        ep_runtime = (parent.runtime or 0) // num_episodes
+        for ep_num in range(1, num_episodes + 1):
+            ep = Content(
+                title=f"Ep {ep_num}",
+                type=ContentType.episode,
+                release_date=parent.release_date,
+                runtime=ep_runtime,
+                episode_number=ep_num,
+                parent_id=parent.id,
+            )
+            db.add(ep)
+        inserted += num_episodes
+
+    db.commit()
+    if inserted:
+        print(f"seed_episodes: inserted {inserted} episode rows.")
+    else:
+        print("seed_episodes: all series already have episodes, nothing to do.")
 
 def main() -> None:
     db = SessionLocal()
     try:
-        seed(db)
+        seed(db)          # no-op if universe already exists
+        seed_episodes(db) # idempotent: fills in missing episodes on existing DBs
     except Exception:
         db.rollback()
         raise
     finally:
         db.close()
-
 
 if __name__ == "__main__":
     main()
