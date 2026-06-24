@@ -94,7 +94,7 @@ class MarathonItemRepository(BaseRepository[MarathonItem]):
                         Progress.watched.is_(True),
                         Progress.content_id.in_([ep.id for ep in content.episodes]),
                     )
-                    .scalars()
+                    .scalar()
                     .all()
                 )
                 if len(watched_ep_ids) < len(content.episodes):
