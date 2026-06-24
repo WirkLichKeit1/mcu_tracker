@@ -50,6 +50,15 @@ class ContentService:
             )
         return obj
 
+    def list_episodes(self, parent_id: int) -> list[Content]:
+        parent = self.repo.get(parent_id)
+        if not parent:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Content {parent_id} not found",
+            )
+        return self.repo.list_episodes(parent_id)
+
     def delete(self, id: int) -> None:
         if not self.repo.delete(id):
             raise HTTPException(

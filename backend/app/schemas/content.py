@@ -29,4 +29,6 @@ class ContentOut(ContentBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    episode_number: int | None = None
+    parent_id: int | None = None
     created_at: datetime

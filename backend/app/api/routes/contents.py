@@ -20,6 +20,13 @@ def list_contents(
 ) -> list[Content]:
     return service.list(skip=skip, limit=limit, type=type)
 
+@router.get("/{id}/episodes", response_model=list[ContentOut])
+def list_episodes(
+    id: int,
+    service: ContentService = Depends(get_service),
+) -> list[Content]:
+    return service.list_episodes(id)
+
 @router.get("/{id}", response_model=ContentOut)
 def get_content(
     id: int,

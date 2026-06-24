@@ -19,6 +19,14 @@ class ContentRepository(BaseRepository[Content]):
             query = query.filter(Content.type == type)
         return query.offset(skip).limit(limit).all()
 
+    def list_episodes(self, parent_id: int) -> list[Content]:
+        return (
+            self.db.query(Content)
+            .filter(Content.parent_id == parent_id)
+            .order_by(Content.episode_number)
+            .all()
+        )
+
     def get_by_tmdb_id(self, tmdb_id: int) -> Content | None:
         return self.db.query(Content).filter(Content.tmdb_id == tmdb_id).first()
 
