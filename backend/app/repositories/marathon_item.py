@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy import select
 
 from app.models.models import Content, MarathonItem, Progress
 from app.repositories.base import BaseRepository
@@ -89,13 +90,12 @@ class MarathonItemRepository(BaseRepository[MarathonItem]):
             if content.type.value == "series" and content.episodes:
                 # Check if any episode is unwatched
                 watched_ep_ids = set(
-                    self.db.query(Progress.content_id)
-                    .filter(
-                        Progress.watched.is_(True),
-                        Progress.content_id.in_([ep.id for ep in content.episodes]),
-                    )
-                    .scalar()
-                    .all()
+                    self.db.execute(
+                        select(Progress.content_id).where(
+                            Progress.watched.is_(True),
+                            Progress.content_id.in_([ep.id for ep in content.episodes]),
+                        )
+                    ).scalars().all()
                 )
                 if len(watched_ep_ids) < len(content.episodes):
                     return item
