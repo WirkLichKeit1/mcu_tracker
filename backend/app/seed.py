@@ -474,10 +474,7 @@ def seed_remove_items(db: Session) -> None:
 
 
 def seed_add_missing(db: Session) -> None:
-    """Idempotent: add Jessica Jones T3 and What If T2 to existing DBs,
-    and fix marathon item positions to match the new ordering."""
-    from app.models.models import Content, ContentType, Era, Marathon, MarathonItem
-
+    """Idempotent: add Jessica Jones T3 and What If T2 to existing DBs."""
     marathon = db.query(Marathon).first()
     if not marathon:
         return  # fresh DB — seed() handles everything
@@ -505,17 +502,51 @@ def seed_add_missing(db: Session) -> None:
         },
     ]
 
+    # Determine which items are actually missing
+    missing = []
     for item_data in new_items:
-        # Skip if content already exists
         existing = (
             db.query(Content)
             .filter(Content.title == item_data["title"])
             .first()
         )
-        if existing:
-            continue
+        if not existing:
+            missing.append(item_data)
 
-        # Create content
+    if not missing:
+        return  # nothing to do
+
+    # Build the final desired positions for ALL marathon items by replaying
+    # the inserts in order. This avoids cascading position errors.
+    # Strategy: for each missing item, collect insertion positions, then do
+    # a single bulk shift of all affected existing items.
+    #
+    # Since items are inserted in position order (43 before 74), we
+    # calculate the cumulative shift each existing item needs.
+    insertion_positions = sorted(item["position"] for item in missing)
+
+    # For each existing marathon item, count how many insertions go at or
+    # before its current position — that's its total shift.
+    existing_items = (
+        db.query(MarathonItem)
+        .filter(MarathonItem.marathon_id == marathon.id)
+        .all()
+    )
+
+    # Phase 1: move all to temp range to avoid constraint violations
+    for mi in existing_items:
+        mi.position += 10000
+    db.flush()
+
+    # Phase 2: move each to its correct final position
+    for mi in existing_items:
+        original_pos = mi.position - 10000
+        shift = sum(1 for ins_pos in insertion_positions if ins_pos <= original_pos)
+        mi.position = original_pos + shift
+    db.flush()
+
+    # Now insert the missing items with their target positions
+    for item_data in missing:
         content = Content(
             title=item_data["title"],
             type=item_data["type"],
@@ -525,7 +556,6 @@ def seed_add_missing(db: Session) -> None:
         db.add(content)
         db.flush()
 
-        # Create episodes
         num_eps = item_data["episodes"]
         ep_runtime = item_data["runtime"] // num_eps
         for ep_num in range(1, num_eps + 1):
@@ -538,29 +568,7 @@ def seed_add_missing(db: Session) -> None:
                 parent_id=content.id,
             ))
 
-        # Find era
         era = db.query(Era).filter(Era.name == item_data["era_name"]).first()
-
-        # Shift existing items at or after the new position using a two-phase
-        # update to avoid unique constraint violations during the shift.
-        # Phase 1: move to a safe temporary range (position + 10000)
-        items_to_shift = (
-            db.query(MarathonItem)
-            .filter(
-                MarathonItem.marathon_id == marathon.id,
-                MarathonItem.position >= item_data["position"],
-            )
-            .all()
-        )
-        for mi in items_to_shift:
-            mi.position += 10000
-        db.flush()
-        # Phase 2: move to final positions
-        for mi in items_to_shift:
-            mi.position -= 9999  # +10000 -9999 = +1
-        db.flush()
-
-        # Create marathon item
         db.add(MarathonItem(
             marathon_id=marathon.id,
             content_id=content.id,
@@ -569,7 +577,7 @@ def seed_add_missing(db: Session) -> None:
             canonical=item_data["canonical"],
         ))
         db.flush()
-        print(f"seed_add_missing: added {item_data['title']!r}.")
+        print(f"seed_add_missing: added {item_data['title']!r} at position {item_data['position']}.")
 
     db.commit()
 
