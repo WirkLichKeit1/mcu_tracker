@@ -474,7 +474,8 @@ def seed_remove_items(db: Session) -> None:
 
 
 def seed_add_missing(db: Session) -> None:
-    """Idempotent: add Jessica Jones T3 and What If T2 to existing DBs."""
+    """Idempotent: insert any content/marathon-items missing from the DB,
+    then enforce the canonical position order defined in MARATHON_ITEMS."""
     marathon = db.query(Marathon).first()
     if not marathon:
         return  # fresh DB — seed() handles everything
@@ -502,84 +503,91 @@ def seed_add_missing(db: Session) -> None:
         },
     ]
 
-    # Determine which items are actually missing
-    missing = []
+    # Step 1: insert any missing content + marathon items
     for item_data in new_items:
-        existing = (
+        content = (
             db.query(Content)
             .filter(Content.title == item_data["title"])
             .first()
         )
-        if not existing:
-            missing.append(item_data)
+        if not content:
+            content = Content(
+                title=item_data["title"],
+                type=item_data["type"],
+                release_date=item_data["release_date"],
+                runtime=item_data["runtime"],
+            )
+            db.add(content)
+            db.flush()
+            print(f"seed_add_missing: created content {item_data['title']!r}")
 
-    if not missing:
-        return  # nothing to do
+            num_eps = item_data["episodes"]
+            ep_runtime = item_data["runtime"] // num_eps
+            for ep_num in range(1, num_eps + 1):
+                db.add(Content(
+                    title=f"Ep {ep_num}",
+                    type=ContentType.episode,
+                    release_date=item_data["release_date"],
+                    runtime=ep_runtime,
+                    episode_number=ep_num,
+                    parent_id=content.id,
+                ))
+            db.flush()
 
-    # Build the final desired positions for ALL marathon items by replaying
-    # the inserts in order. This avoids cascading position errors.
-    # Strategy: for each missing item, collect insertion positions, then do
-    # a single bulk shift of all affected existing items.
-    #
-    # Since items are inserted in position order (43 before 74), we
-    # calculate the cumulative shift each existing item needs.
-    insertion_positions = sorted(item["position"] for item in missing)
+        mi = (
+            db.query(MarathonItem)
+            .filter(
+                MarathonItem.marathon_id == marathon.id,
+                MarathonItem.content_id == content.id,
+            )
+            .first()
+        )
+        if not mi:
+            era = db.query(Era).filter(Era.name == item_data["era_name"]).first()
+            db.add(MarathonItem(
+                marathon_id=marathon.id,
+                content_id=content.id,
+                era_id=era.id if era else None,
+                position=99999,  # temporary — reorder below will fix it
+                canonical=item_data["canonical"],
+            ))
+            db.flush()
+            print(f"seed_add_missing: created marathon item for {item_data['title']!r}")
 
-    # For each existing marathon item, count how many insertions go at or
-    # before its current position — that's its total shift.
-    existing_items = (
+    db.commit()
+
+    # Step 2: enforce correct positions from MARATHON_ITEMS
+    # Build title → desired_position map
+    desired: dict[str, int] = {title: pos for title, _, pos, _ in MARATHON_ITEMS}
+
+    all_items = (
         db.query(MarathonItem)
         .filter(MarathonItem.marathon_id == marathon.id)
+        .join(MarathonItem.content)
         .all()
     )
 
-    # Phase 1: move all to temp range to avoid constraint violations
-    for mi in existing_items:
+    # Phase 1: move everything to temp range to avoid unique constraint conflicts
+    for mi in all_items:
         mi.position += 10000
     db.flush()
 
-    # Phase 2: move each to its correct final position
-    for mi in existing_items:
-        original_pos = mi.position - 10000
-        shift = sum(1 for ins_pos in insertion_positions if ins_pos <= original_pos)
-        mi.position = original_pos + shift
+    # Phase 2: assign correct positions
+    reordered = 0
+    for mi in all_items:
+        title = mi.content.title
+        if title in desired:
+            correct = desired[title]
+            if mi.position != correct:  # compare against temp-shifted value would always differ, use content title
+                mi.position = correct
+                reordered += 1
     db.flush()
-
-    # Now insert the missing items with their target positions
-    for item_data in missing:
-        content = Content(
-            title=item_data["title"],
-            type=item_data["type"],
-            release_date=item_data["release_date"],
-            runtime=item_data["runtime"],
-        )
-        db.add(content)
-        db.flush()
-
-        num_eps = item_data["episodes"]
-        ep_runtime = item_data["runtime"] // num_eps
-        for ep_num in range(1, num_eps + 1):
-            db.add(Content(
-                title=f"Ep {ep_num}",
-                type=ContentType.episode,
-                release_date=item_data["release_date"],
-                runtime=ep_runtime,
-                episode_number=ep_num,
-                parent_id=content.id,
-            ))
-
-        era = db.query(Era).filter(Era.name == item_data["era_name"]).first()
-        db.add(MarathonItem(
-            marathon_id=marathon.id,
-            content_id=content.id,
-            era_id=era.id if era else None,
-            position=item_data["position"],
-            canonical=item_data["canonical"],
-        ))
-        db.flush()
-        print(f"seed_add_missing: added {item_data['title']!r} at position {item_data['position']}.")
-
     db.commit()
+
+    if reordered:
+        print(f"seed_add_missing: reordered {reordered} marathon items to correct positions.")
+    else:
+        print("seed_add_missing: all positions already correct.")
 
 
 def main() -> None:
