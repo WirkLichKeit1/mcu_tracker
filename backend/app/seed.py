@@ -541,7 +541,9 @@ def seed_add_missing(db: Session) -> None:
         # Find era
         era = db.query(Era).filter(Era.name == item_data["era_name"]).first()
 
-        # Shift existing items at or after the new position to make room
+        # Shift existing items at or after the new position using a two-phase
+        # update to avoid unique constraint violations during the shift.
+        # Phase 1: move to a safe temporary range (position + 10000)
         items_to_shift = (
             db.query(MarathonItem)
             .filter(
@@ -551,7 +553,11 @@ def seed_add_missing(db: Session) -> None:
             .all()
         )
         for mi in items_to_shift:
-            mi.position += 1
+            mi.position += 10000
+        db.flush()
+        # Phase 2: move to final positions
+        for mi in items_to_shift:
+            mi.position -= 9999  # +10000 -9999 = +1
         db.flush()
 
         # Create marathon item
