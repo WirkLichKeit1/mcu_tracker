@@ -93,6 +93,7 @@ CONTENTS: list[tuple[str, ContentType, str | None, int | None]] = [
     ("Luke Cage – Temporada 2", ContentType.series, "2018-06-22", 676),
     ("Iron Fist – Temporada 2", ContentType.series, "2018-09-07", 440),
     ("Daredevil – Temporada 3", ContentType.series, "2018-10-19", 676),
+    ("Jessica Jones – Temporada 3", ContentType.series, "2019-06-14", 676),
     ("Thor: Ragnarok", ContentType.movie, "2017-11-03", 130),
     ("Agents of S.H.I.E.L.D. – Temporada 5", ContentType.series, "2017-12-01", 990),
     ("Ant-Man and the Wasp", ContentType.movie, "2018-07-06", 118),
@@ -104,6 +105,7 @@ CONTENTS: list[tuple[str, ContentType, str | None, int | None]] = [
     # Era 11 — Saga do Multiverso
     ("Loki – Temporada 1", ContentType.series, "2021-06-09", 360),
     ("What If...? – Temporada 1", ContentType.series, "2021-08-11", 360),
+    ("What If...? – Temporada 2", ContentType.series, "2023-12-22", 360),
     ("WandaVision", ContentType.series, "2021-01-15", 396),
     ("The Falcon and the Winter Soldier", ContentType.series, "2021-03-19", 360),
     ("Shang-Chi and the Legend of the Ten Rings", ContentType.movie, "2021-09-03", 132),
@@ -194,53 +196,55 @@ MARATHON_ITEMS: list[tuple[str, str, int, bool]] = [
     ("Luke Cage – Temporada 2", "Ragnarok e o Fim da Saga do Infinito", 40, True),
     ("Iron Fist – Temporada 2", "Ragnarok e o Fim da Saga do Infinito", 41, True),
     ("Daredevil – Temporada 3", "Ragnarok e o Fim da Saga do Infinito", 42, True),
-    ("Thor: Ragnarok", "Ragnarok e o Fim da Saga do Infinito", 43, True),
-    ("Agents of S.H.I.E.L.D. – Temporada 5", "Ragnarok e o Fim da Saga do Infinito", 44, True),
-    ("Ant-Man and the Wasp", "Ragnarok e o Fim da Saga do Infinito", 45, True),
-    ("Avengers: Infinity War", "Ragnarok e o Fim da Saga do Infinito", 46, True),
+    ("Jessica Jones – Temporada 3", "Ragnarok e o Fim da Saga do Infinito", 43, True),
+    ("Thor: Ragnarok", "Ragnarok e o Fim da Saga do Infinito", 44, True),
+    ("Agents of S.H.I.E.L.D. – Temporada 5", "Ragnarok e o Fim da Saga do Infinito", 45, True),
+    ("Ant-Man and the Wasp", "Ragnarok e o Fim da Saga do Infinito", 46, True),
+    ("Avengers: Infinity War", "Ragnarok e o Fim da Saga do Infinito", 47, True),
     # Era 10
-    ("Agents of S.H.I.E.L.D. – Temporada 6", "O Blip e o Retorno", 47, True),
-    ("Agents of S.H.I.E.L.D. – Temporada 7", "O Blip e o Retorno", 48, True),
-    ("Avengers: Endgame", "O Blip e o Retorno", 49, True),
+    ("Agents of S.H.I.E.L.D. – Temporada 6", "O Blip e o Retorno", 48, True),
+    ("Agents of S.H.I.E.L.D. – Temporada 7", "O Blip e o Retorno", 49, True),
+    ("Avengers: Endgame", "O Blip e o Retorno", 50, True),
     # Era 11
-    ("Loki – Temporada 1", "Saga do Multiverso", 50, True),
-    ("What If...? – Temporada 1", "Saga do Multiverso", 51, True),
-    ("WandaVision", "Saga do Multiverso", 52, True),
-    ("The Falcon and the Winter Soldier", "Saga do Multiverso", 53, True),
-    ("Shang-Chi and the Legend of the Ten Rings", "Saga do Multiverso", 54, True),
-    ("Eternals", "Saga do Multiverso", 55, True),
-    ("Spider-Man: Far From Home", "Saga do Multiverso", 56, True),
-    ("Spider-Man: No Way Home", "Saga do Multiverso", 57, True),
-    ("Hawkeye", "Saga do Multiverso", 58, True),
-    ("Doctor Strange in the Multiverse of Madness", "Saga do Multiverso", 59, True),
-    ("Moon Knight", "Saga do Multiverso", 60, True),
-    ("Ms. Marvel", "Saga do Multiverso", 61, True),
-    ("She-Hulk: Attorney at Law", "Saga do Multiverso", 62, True),
-    ("Thor: Love and Thunder", "Saga do Multiverso", 63, True),
-    ("Werewolf by Night", "Saga do Multiverso", 64, True),
-    ("Black Panther: Wakanda Forever", "Saga do Multiverso", 65, True),
-    ("The Guardians of the Galaxy Holiday Special", "Saga do Multiverso", 66, True),
-    ("Ant-Man and the Wasp: Quantumania", "Saga do Multiverso", 67, True),
-    ("Guardians of the Galaxy Vol. 3", "Saga do Multiverso", 68, True),
-    ("Secret Invasion", "Saga do Multiverso", 69, True),
-    ("The Marvels", "Saga do Multiverso", 70, True),
-    ("Loki – Temporada 2", "Saga do Multiverso", 71, True),
-    ("Echo", "Saga do Multiverso", 72, True),
-    ("Deadpool & Wolverine", "Saga do Multiverso", 73, True),
-    ("Agatha All Along", "Saga do Multiverso", 74, True),
-    ("Ironheart", "Saga do Multiverso", 75, True),
-    ("Daredevil: Born Again", "Saga do Multiverso", 76, True),
-    ("Captain America: Brave New World", "Saga do Multiverso", 77, True),
-    ("Thunderbolts*", "Saga do Multiverso", 78, True),
-    ("The Fantastic Four: First Steps", "Saga do Multiverso", 79, True),
-    ("Avengers: Doomsday", "Saga do Multiverso", 80, True),
+    ("Loki – Temporada 1", "Saga do Multiverso", 51, True),
+    ("What If...? – Temporada 1", "Saga do Multiverso", 52, True),
+    ("What If...? – Temporada 2", "Saga do Multiverso", 53, True),
+    ("WandaVision", "Saga do Multiverso", 54, True),
+    ("The Falcon and the Winter Soldier", "Saga do Multiverso", 55, True),
+    ("Shang-Chi and the Legend of the Ten Rings", "Saga do Multiverso", 56, True),
+    ("Eternals", "Saga do Multiverso", 57, True),
+    ("Spider-Man: Far From Home", "Saga do Multiverso", 58, True),
+    ("Spider-Man: No Way Home", "Saga do Multiverso", 59, True),
+    ("Hawkeye", "Saga do Multiverso", 60, True),
+    ("Doctor Strange in the Multiverse of Madness", "Saga do Multiverso", 61, True),
+    ("Moon Knight", "Saga do Multiverso", 62, True),
+    ("Ms. Marvel", "Saga do Multiverso", 63, True),
+    ("She-Hulk: Attorney at Law", "Saga do Multiverso", 64, True),
+    ("Thor: Love and Thunder", "Saga do Multiverso", 65, True),
+    ("Werewolf by Night", "Saga do Multiverso", 66, True),
+    ("Black Panther: Wakanda Forever", "Saga do Multiverso", 67, True),
+    ("The Guardians of the Galaxy Holiday Special", "Saga do Multiverso", 68, True),
+    ("Ant-Man and the Wasp: Quantumania", "Saga do Multiverso", 69, True),
+    ("Guardians of the Galaxy Vol. 3", "Saga do Multiverso", 70, True),
+    ("Secret Invasion", "Saga do Multiverso", 71, True),
+    ("The Marvels", "Saga do Multiverso", 72, True),
+    ("Loki – Temporada 2", "Saga do Multiverso", 73, True),
+    ("Echo", "Saga do Multiverso", 74, True),
+    ("Deadpool & Wolverine", "Saga do Multiverso", 75, True),
+    ("Agatha All Along", "Saga do Multiverso", 76, True),
+    ("Ironheart", "Saga do Multiverso", 77, True),
+    ("Daredevil: Born Again", "Saga do Multiverso", 78, True),
+    ("Captain America: Brave New World", "Saga do Multiverso", 79, True),
+    ("Thunderbolts*", "Saga do Multiverso", 80, True),
+    ("The Fantastic Four: First Steps", "Saga do Multiverso", 81, True),
+    ("Avengers: Doomsday", "Saga do Multiverso", 82, True),
     # Era 12 — opcional
-    ("X-Men '97", "Multiverso / Realidades Paralelas (opcional)", 81, False),
-    ("Marvel Zombies", "Multiverso / Realidades Paralelas (opcional)", 82, False),
-    ("Your Friendly Neighborhood Spider-Man", "Multiverso / Realidades Paralelas (opcional)", 83, False),
-    ("Spider-Man – Trilogia (Sam Raimi)", "Multiverso / Realidades Paralelas (opcional)", 84, False),
-    ("The Amazing Spider-Man – Duologia", "Multiverso / Realidades Paralelas (opcional)", 85, False),
-    ("X-Men – Franquia", "Multiverso / Realidades Paralelas (opcional)", 86, False),
+    ("X-Men '97", "Multiverso / Realidades Paralelas (opcional)", 83, False),
+    ("Marvel Zombies", "Multiverso / Realidades Paralelas (opcional)", 84, False),
+    ("Your Friendly Neighborhood Spider-Man", "Multiverso / Realidades Paralelas (opcional)", 85, False),
+    ("Spider-Man – Trilogia (Sam Raimi)", "Multiverso / Realidades Paralelas (opcional)", 86, False),
+    ("The Amazing Spider-Man – Duologia", "Multiverso / Realidades Paralelas (opcional)", 87, False),
+    ("X-Men – Franquia", "Multiverso / Realidades Paralelas (opcional)", 88, False),
 ]
 
 # ---------------------------------------------------------------------------
@@ -265,6 +269,7 @@ SERIES_EPISODES: dict[str, int] = {
     "Daredevil – Temporada 3": 13,
     "Jessica Jones – Temporada 1": 13,
     "Jessica Jones – Temporada 2": 13,
+    "Jessica Jones – Temporada 3": 13,
     "Luke Cage – Temporada 1": 13,
     "Luke Cage – Temporada 2": 13,
     "Iron Fist – Temporada 1": 13,
@@ -277,6 +282,7 @@ SERIES_EPISODES: dict[str, int] = {
     "Loki – Temporada 2": 6,
     # What If...?
     "What If...? – Temporada 1": 9,
+    "What If...? – Temporada 2": 9,
     # Disney+ series
     "WandaVision": 9,
     "The Falcon and the Winter Soldier": 6,
@@ -467,13 +473,109 @@ def seed_remove_items(db: Session) -> None:
     db.commit()
 
 
+def seed_add_missing(db: Session) -> None:
+    """Idempotent: add Jessica Jones T3 and What If T2 to existing DBs,
+    and fix marathon item positions to match the new ordering."""
+    from app.models.models import Content, ContentType, Era, Marathon, MarathonItem
+
+    marathon = db.query(Marathon).first()
+    if not marathon:
+        return  # fresh DB — seed() handles everything
+
+    new_items = [
+        {
+            "title": "Jessica Jones – Temporada 3",
+            "type": ContentType.series,
+            "release_date": "2019-06-14",
+            "runtime": 676,
+            "era_name": "Ragnarok e o Fim da Saga do Infinito",
+            "position": 43,
+            "canonical": True,
+            "episodes": 13,
+        },
+        {
+            "title": "What If...? – Temporada 2",
+            "type": ContentType.series,
+            "release_date": "2023-12-22",
+            "runtime": 360,
+            "era_name": "Saga do Multiverso",
+            "position": 53,
+            "canonical": True,
+            "episodes": 9,
+        },
+    ]
+
+    for item_data in new_items:
+        # Skip if content already exists
+        existing = (
+            db.query(Content)
+            .filter(Content.title == item_data["title"])
+            .first()
+        )
+        if existing:
+            continue
+
+        # Create content
+        content = Content(
+            title=item_data["title"],
+            type=item_data["type"],
+            release_date=item_data["release_date"],
+            runtime=item_data["runtime"],
+        )
+        db.add(content)
+        db.flush()
+
+        # Create episodes
+        num_eps = item_data["episodes"]
+        ep_runtime = item_data["runtime"] // num_eps
+        for ep_num in range(1, num_eps + 1):
+            db.add(Content(
+                title=f"Ep {ep_num}",
+                type=ContentType.episode,
+                release_date=item_data["release_date"],
+                runtime=ep_runtime,
+                episode_number=ep_num,
+                parent_id=content.id,
+            ))
+
+        # Find era
+        era = db.query(Era).filter(Era.name == item_data["era_name"]).first()
+
+        # Shift existing items at or after the new position to make room
+        items_to_shift = (
+            db.query(MarathonItem)
+            .filter(
+                MarathonItem.marathon_id == marathon.id,
+                MarathonItem.position >= item_data["position"],
+            )
+            .all()
+        )
+        for mi in items_to_shift:
+            mi.position += 1
+        db.flush()
+
+        # Create marathon item
+        db.add(MarathonItem(
+            marathon_id=marathon.id,
+            content_id=content.id,
+            era_id=era.id if era else None,
+            position=item_data["position"],
+            canonical=item_data["canonical"],
+        ))
+        db.flush()
+        print(f"seed_add_missing: added {item_data['title']!r}.")
+
+    db.commit()
+
+
 def main() -> None:
     db = SessionLocal()
     try:
-        seed(db)              # no-op if universe already exists
-        seed_episodes(db)     # idempotent: fills in missing episodes
+        seed(db)                  # no-op if universe already exists
+        seed_episodes(db)         # idempotent: fills in missing episodes
         seed_canonical_flags(db)  # idempotent: fix Netflix series canonical flag
         seed_remove_items(db)     # idempotent: remove dropped series
+        seed_add_missing(db)      # idempotent: add JJ T3 and What If T2
     except Exception:
         db.rollback()
         raise
