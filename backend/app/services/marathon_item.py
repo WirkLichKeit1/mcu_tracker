@@ -21,13 +21,33 @@ class MarathonItemService:
         self,
         marathon_id: int,
         canonical_only: bool = False,
-    ) -> list[MarathonItem]:
+    ) -> list[dict]:
         if not self.marathon_repo.get(marathon_id):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Marathon {marathon_id} not found",
             )
-        return self.repo.list_by_marathon(marathon_id, canonical_only=canonical_only)
+        items = self.repo.list_by_marathon(marathon_id, canonical_only=canonical_only)
+
+        # Enrich each item with episode_count so the frontend can compute
+        # series completion state without a separate episodes fetch.
+        result = []
+        for item in items:
+            episodes = sorted(item.content.episodes or [], key=lambda e: e.episode_number or 0)
+            d = {
+                "id": item.id,
+                "marathon_id": item.marathon_id,
+                "content_id": item.content_id,
+                "era_id": item.era_id,
+                "position": item.position,
+                "canonical": item.canonical,
+                "content": item.content,
+                "era": item.era,
+                "episode_count": len(episodes),
+                "episode_ids": [ep.id for ep in episodes],
+            }
+            result.append(d)
+        return result
 
     def get(self, id: int) -> MarathonItem:
         obj = self.repo.get(id)

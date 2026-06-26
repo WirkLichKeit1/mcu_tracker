@@ -22,7 +22,7 @@ def list_marathon_items(
     marathon_id: int,
     canonical_only: bool = False,
     service: MarathonItemService = Depends(get_service),
-) -> list[MarathonItem]:
+) -> list[dict]:
     return service.list(marathon_id=marathon_id, canonical_only=canonical_only)
 
 @router.get("/marathons/{marathon_id}/next", response_model=NextItemOut)

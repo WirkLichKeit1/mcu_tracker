@@ -28,3 +28,5 @@ class MarathonItemDetailOut(MarathonItemOut):
 
     content: ContentOut
     era: EraOut | None = None
+    episode_count: int = 0        # number of child episode: 0 for non-series
+    episode_ids: list[int] = []   # ordered episode content IDs: [] for non-series
