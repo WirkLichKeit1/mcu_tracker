@@ -4,6 +4,7 @@ from starlette.middleware import Middleware
 
 from app.config import settings
 from app.api.routes import universes, marathons, eras, contents, marathon_items, progress
+from app.api.routes import import_marathon
 
 if settings.ENV == "development":
     _cors_origins = ["*"]
@@ -31,6 +32,7 @@ app.include_router(eras.router)
 app.include_router(contents.router)
 app.include_router(marathon_items.router)
 app.include_router(progress.router)
+app.include_router(import_marathon.router)
 
 @app.get("/health", tags=["health"])
 def health_check() -> dict[str, str]:
